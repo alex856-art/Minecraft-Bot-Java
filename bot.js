@@ -3,10 +3,10 @@ const minecraftData = require('minecraft-data');
 
 // Konfigurasi bot
 const botOptions = {
-  host: 'surv1chunk.aternos.me', // Ganti dengan IP server Anda
-  port: 15189, // Port default Minecraft
+  host: 'IP', // Ganti dengan IP server Anda
+  port: Port, // Port default Minecraft
   username: 'Bot_' + Math.floor(Math.random() * 10000), // Nama pengguna bot secara acak
-  version: '1.20.4' // Pastikan versi ini didukung oleh mineflayer
+  version: 'Versi' // Pastikan versi ini didukung oleh mineflayer
 };
 
 const bot = mineflayer.createBot(botOptions);
