@@ -1,34 +1,33 @@
 const mineflayer = require('mineflayer');
+const minecraftData = require('minecraft-data');
 
 // Konfigurasi bot
 const botOptions = {
   host: 'IP', // Ganti dengan IP server Anda
   port: PORT, // Port default Minecraft
   username: 'Bot_' + Math.floor(Math.random() * 10000), // Nama pengguna bot secara acak
-  version: 'VERSI' // Versi Minecraft
+  version: 'VERSI' // Pastikan versi ini didukung oleh mineflayer
 };
 
-let bot;
+const bot = mineflayer.createBot(botOptions);
 
-function createBot() {
-  bot = mineflayer.createBot(botOptions);
+bot.on('login', () => {
+  console.log(`Bot ${botOptions.username} berhasil masuk ke server!`);
+  console.log(`Bot version: ${bot.version}`);
+  moveRandomly();
+});
 
-  bot.on('login', () => {
-    console.log(`Bot ${botOptions.username} berhasil masuk ke server!`);
-    moveRandomly();
-  });
+bot.on('end', () => {
+  console.log('Bot terputus dari server, mencoba untuk menghubungkan kembali...');
+  setTimeout(() => {
+    const newBot = mineflayer.createBot(botOptions);
+    newBot.on('login', moveRandomly);
+  }, 5000);
+});
 
-  bot.on('end', () => {
-    console.log('Bot terputus dari server, mencoba untuk menghubungkan kembali...');
-    setTimeout(createBot, 5000); // Coba reconnect setelah 5 detik
-  });
-
-  bot.on('error', (err) => {
-    console.log(`Terjadi kesalahan: ${err.message}`);
-    // Tangani error dan coba reconnect
-    bot.end();
-  });
-}
+bot.on('error', (err) => {
+  console.log(`Terjadi kesalahan: ${err.message}`);
+});
 
 function moveRandomly() {
   setInterval(() => {
@@ -55,8 +54,11 @@ function moveRandomly() {
     }, Math.floor(Math.random() * 1000) + 500); // Durasi gerakan antara 500ms hingga 1500ms
 
     console.log(`Bot bergerak ke ${direction}`);
-  }, 2000); // Interval gerakan bot
+  }, 2000);
 }
 
-// Mulai bot
-createBot();
+bot.on('kicked', (reason, loggedIn) => {
+  console.log(`Bot kicked: ${reason} ${loggedIn}`);
+});
+
+bot.on('error', err => console.log(err));
