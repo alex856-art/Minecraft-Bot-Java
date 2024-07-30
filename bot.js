@@ -1,64 +1,50 @@
-const mineflayer = require('mineflayer');
-const minecraftData = require('minecraft-data');
+const mineflayer = require('mineflayer')
 
-// Konfigurasi bot
-const botOptions = {
-  host: 'IP', // Ganti dengan IP server Anda
-  port: PORT, // Port default Minecraft
-  username: 'Bot_' + Math.floor(Math.random() * 10000), // Nama pengguna bot secara acak
-  version: 'VERSI' // Pastikan versi ini didukung oleh mineflayer
-};
-
-const bot = mineflayer.createBot(botOptions);
-
-bot.on('login', () => {
-  console.log(`Bot ${botOptions.username} berhasil masuk ke server!`);
-  console.log(`Bot version: ${bot.version}`);
-  moveRandomly();
-});
-
-bot.on('end', () => {
-  console.log('Bot terputus dari server, mencoba untuk menghubungkan kembali...');
-  setTimeout(() => {
-    const newBot = mineflayer.createBot(botOptions);
-    newBot.on('login', moveRandomly);
-  }, 5000);
-});
-
-bot.on('error', (err) => {
-  console.log(`Terjadi kesalahan: ${err.message}`);
-});
-
-function moveRandomly() {
-  setInterval(() => {
-    const directions = ['forward', 'back', 'left', 'right'];
-    const direction = directions[Math.floor(Math.random() * directions.length)];
-
-    switch (direction) {
-      case 'forward':
-        bot.setControlState('forward', true);
-        break;
-      case 'back':
-        bot.setControlState('back', true);
-        break;
-      case 'left':
-        bot.setControlState('left', true);
-        break;
-      case 'right':
-        bot.setControlState('right', true);
-        break;
-    }
-
-    setTimeout(() => {
-      bot.clearControlStates();
-    }, Math.floor(Math.random() * 1000) + 500); // Durasi gerakan antara 500ms hingga 1500ms
-
-    console.log(`Bot bergerak ke ${direction}`);
-  }, 2000);
+function getRandomInt(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min
 }
 
-bot.on('kicked', (reason, loggedIn) => {
-  console.log(`Bot kicked: ${reason} ${loggedIn}`);
-});
+const botName = `Bot_${getRandomInt(1000, 9999)}`
 
-bot.on('error', err => console.log(err));
+const bot = mineflayer.createBot({
+  host: 'IP', // IP server
+  port: PORT,                    // Port server
+  username: botName,              // Nama akun dengan angka acak
+  version: 'VERSI',              // Versi Minecraft
+  hideErrors: false,
+  checkTimeoutInterval: 30000,    // Periksa koneksi setiap 30 detik
+})
+
+bot.on('login', () => {
+  console.log(`Bot logged in as ${bot.username}`)
+  bot.chat('Hello! I am a bot.')
+  randomMovement()
+})
+
+bot.on('kicked', (reason, loggedIn) => console.log(reason, loggedIn))
+bot.on('error', err => console.log(err))
+
+function randomMovement() {
+  setInterval(() => {
+    const x = (Math.random() * 2 - 1) * 10 // Gerakan random di sumbu x
+    const z = (Math.random() * 2 - 1) * 10 // Gerakan random di sumbu z
+    bot.setControlState('forward', true)
+    bot.setControlState('jump', true)
+    bot.setControlState('left', x < 0)
+    bot.setControlState('right', x > 0)
+    bot.lookAt(bot.entity.position.offset(x, 0, z))
+    setTimeout(() => {
+      bot.setControlState('forward', false)
+      bot.setControlState('jump', false)
+      bot.setControlState('left', false)
+      bot.setControlState('right', false)
+    }, 2000) // Gerak selama 2 detik
+  }, 60000) // Setiap 1 menit
+}
+
+bot.on('end', () => {
+  console.log('Bot disconnected. Reconnecting...')
+  setTimeout(() => {
+    mineflayer.createBot(bot.options)
+  }, 5000) // Reconnect after 5 seconds
+})
